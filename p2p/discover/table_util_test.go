@@ -43,7 +43,7 @@ func init() {
 
 func newTestTable(t transport) (*Table, *enode.DB) {
 	db, _ := enode.OpenDB("")
-	tab, _ := newTable(t, db, nil, log.Root(), nil)
+	tab, _ := newTable(t, db, nil, log.Root(), nil, defaultBucketSize)
 	go tab.loop()
 	return tab, db
 }
@@ -100,10 +100,10 @@ func intIP(i int) net.IP {
 func fillBucket(tab *Table, n *node) (last *node) {
 	ld := enode.LogDist(tab.self().ID(), n.ID())
 	b := tab.bucket(n.ID())
-	for len(b.entries) < bucketSize {
+	for len(b.entries) < tab.bucketSize {
 		b.entries = append(b.entries, nodeAtDistance(tab.self().ID(), ld, intIP(ld)))
 	}
-	return b.entries[bucketSize-1]
+	return b.entries[tab.bucketSize-1]
 }
 
 // fillTable adds nodes the table to the end of their corresponding bucket

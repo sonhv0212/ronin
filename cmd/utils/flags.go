@@ -871,6 +871,12 @@ var (
 		Usage:    "Sets DNS discovery entry points (use \"\" to disable DNS)",
 		Category: flags.NetworkingCategory,
 	}
+	DHTBucketSizeFlag = &cli.IntFlag{
+		Name:     "dht.bucketsize",
+		Usage:    "Size of each DHT bucket",
+		Value:    16,
+		Category: flags.NetworkingCategory,
+	}
 
 	// ATM the url is left to the user and deployment to
 	JSpathFlag = &flags.DirectoryFlag{
@@ -1542,6 +1548,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.NoDiscovery = true
 		cfg.DiscoveryV5 = false
 	}
+	cfg.DHTBucketSize = ctx.Int(DHTBucketSizeFlag.Name)
 }
 
 // SetNodeConfig applies node-related command line flags to the config.

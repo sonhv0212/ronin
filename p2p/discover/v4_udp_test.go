@@ -258,7 +258,7 @@ func TestUDPv4_findnode(t *testing.T) {
 	// take care not to overflow any bucket.
 	nodes := &nodesByDistance{target: testTarget.ID()}
 	live := make(map[enode.ID]bool)
-	numCandidates := 2 * bucketSize
+	numCandidates := 2 * defaultBucketSize
 	for i := 0; i < numCandidates; i++ {
 		key := newkey()
 		ip := net.IP{10, 13, 0, byte(i)}
@@ -278,12 +278,12 @@ func TestUDPv4_findnode(t *testing.T) {
 	test.table.db.UpdateLastPongReceived(remoteID, test.remoteaddr.IP, time.Now())
 
 	// check that closest neighbors are returned.
-	expected := test.table.findnodeByID(testTarget.ID(), bucketSize, true)
+	expected := test.table.findnodeByID(testTarget.ID(), defaultBucketSize, true)
 	test.packetIn(nil, &v4wire.Findnode{Target: testTarget, Expiration: futureExp})
 	waitNeighbors := func(want []*node) {
 		test.waitPacketOut(func(p *v4wire.Neighbors, to *net.UDPAddr, hash []byte) {
 			if len(p.Nodes) != len(want) {
-				t.Errorf("wrong number of results: got %d, want %d", len(p.Nodes), bucketSize)
+				t.Errorf("wrong number of results: got %d, want %d", len(p.Nodes), defaultBucketSize)
 			}
 			for i, n := range p.Nodes {
 				if n.ID.ID() != want[i].ID() {

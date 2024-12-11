@@ -73,7 +73,7 @@ func (it *lookup) advance() bool {
 			for _, n := range nodes {
 				if n != nil && !it.seen[n.ID()] {
 					it.seen[n.ID()] = true
-					it.result.push(n, bucketSize)
+					it.result.push(n, defaultBucketSize)
 					it.replyBuffer = append(it.replyBuffer, n)
 				}
 			}
@@ -104,7 +104,7 @@ func (it *lookup) startQueries() bool {
 
 	// The first query returns nodes from the local table.
 	if it.queries == -1 {
-		closest := it.tab.findnodeByID(it.result.target, bucketSize, false)
+		closest := it.tab.findnodeByID(it.result.target, defaultBucketSize, false)
 		// Avoid finishing the lookup too quickly if table is empty. It'd be better to wait
 		// for the table to fill in this case, but there is no good mechanism for that
 		// yet.
@@ -151,7 +151,7 @@ func (it *lookup) query(n *node, reply chan<- []*node) {
 		// Remove the node from the local table if it fails to return anything useful too
 		// many times, but only if there are enough other nodes in the bucket.
 		dropped := false
-		if fails >= maxFindnodeFailures && it.tab.bucketLen(n.ID()) >= bucketSize/2 {
+		if fails >= maxFindnodeFailures && it.tab.bucketLen(n.ID()) >= defaultBucketSize/2 {
 			dropped = true
 			it.tab.delete(n)
 		}

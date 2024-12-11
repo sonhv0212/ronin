@@ -79,7 +79,7 @@ func testPingReplace(t *testing.T, newNodeIsResponding, lastInBucketIsResponding
 
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
-	wantSize := bucketSize
+	wantSize := defaultBucketSize
 	if !lastInBucketIsResponding && !newNodeIsResponding {
 		wantSize--
 	}
@@ -102,7 +102,7 @@ func TestBucket_bumpNoDuplicates(t *testing.T) {
 		Rand:     rand.New(rand.NewSource(time.Now().Unix())),
 		Values: func(args []reflect.Value, rand *rand.Rand) {
 			// generate a random list of nodes. this will be the content of the bucket.
-			n := rand.Intn(bucketSize-1) + 1
+			n := rand.Intn(defaultBucketSize-1) + 1
 			nodes := make([]*node, n)
 			for i := range nodes {
 				nodes[i] = nodeAtDistance(enode.ID{}, 200, intIP(200))
@@ -296,7 +296,7 @@ func (*closeTest) Generate(rand *rand.Rand, size int) reflect.Value {
 	t := &closeTest{
 		Self:   gen(enode.ID{}, rand).(enode.ID),
 		Target: gen(enode.ID{}, rand).(enode.ID),
-		N:      rand.Intn(bucketSize),
+		N:      rand.Intn(defaultBucketSize),
 	}
 	for _, id := range gen([]enode.ID{}, rand).([]enode.ID) {
 		r := new(enr.Record)

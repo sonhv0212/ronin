@@ -78,6 +78,7 @@ type Config struct {
 	ValidSchemes   enr.IdentityScheme // allowed identity schemes
 	Clock          mclock.Clock
 	FilterFunction NodeFilterFunc // function for filtering ENR entries
+	DHTBucketSize  int            // size of each bucket in DHT
 }
 
 func (cfg Config) withDefaults() Config {

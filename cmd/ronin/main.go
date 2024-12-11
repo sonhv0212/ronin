@@ -180,6 +180,7 @@ var (
 		utils.DisableRoninProtocol,
 		utils.AdditionalChainEventFlag,
 		utils.DBEngineFlag,
+		utils.DHTBucketSizeFlag,
 	}
 
 	rpcFlags = []cli.Flag{

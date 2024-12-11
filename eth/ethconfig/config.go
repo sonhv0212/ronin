@@ -228,6 +228,9 @@ type Config struct {
 
 	// Send additional chain event
 	EnableAdditionalChainEvent bool
+
+	// Size of each bucket in DHT
+	DHTBucketSize int
 }
 
 // CreateConsensusEngine creates a consensus engine for the given chain configuration.

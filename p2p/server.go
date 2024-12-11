@@ -168,6 +168,9 @@ type Config struct {
 	Logger log.Logger `toml:",omitempty"`
 
 	clock mclock.Clock
+
+	// Size of each bucket in DHT
+	DHTBucketSize int
 }
 
 // Server manages all peer connections.
@@ -630,6 +633,7 @@ func (srv *Server) setupDiscovery() error {
 			Unhandled:      unhandled,
 			Log:            srv.log,
 			FilterFunction: f,
+			DHTBucketSize:  srv.Config.DHTBucketSize,
 		}
 		ntab, err := discover.ListenV4(conn, srv.localnode, cfg)
 		if err != nil {

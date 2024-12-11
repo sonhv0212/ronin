@@ -41,7 +41,7 @@ import (
 
 const (
 	alpha                  = 3               // Kademlia concurrency factor
-	bucketSize             = 16              // Kademlia bucket size
+	defaultBucketSize      = 16              // Kademlia bucket size
 	maxReplacements        = 10              // Size of per-bucket replacement list
 	maxWorkerTask          = 90              // Maximum number of worker tasks
 	timeoutWorkerTaskClose = 1 * time.Second // Timeout for waiting workerPoolTask is refill full
@@ -67,11 +67,12 @@ const (
 // itself up-to-date by verifying the liveness of neighbors and requesting their node
 // records when announcements of a new record version are received.
 type Table struct {
-	mutex   sync.Mutex        // protects buckets, bucket content, nursery, rand
-	buckets [nBuckets]*bucket // index of known nodes by distance
-	nursery []*node           // bootstrap nodes
-	rand    *mrand.Rand       // source of randomness, periodically reseeded
-	ips     netutil.DistinctNetSet
+	mutex      sync.Mutex        // protects buckets, bucket content, nursery, rand
+	buckets    [nBuckets]*bucket // index of known nodes by distance
+	nursery    []*node           // bootstrap nodes
+	rand       *mrand.Rand       // source of randomness, periodically reseeded
+	ips        netutil.DistinctNetSet
+	bucketSize int
 
 	log            log.Logger
 	db             *enode.DB // database of known nodes
@@ -105,7 +106,7 @@ type bucket struct {
 	index        int
 }
 
-func newTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger, filter NodeFilterFunc) (*Table, error) {
+func newTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger, filter NodeFilterFunc, bucketSize int) (*Table, error) {
 	tab := &Table{
 		net:            t,
 		db:             db,
@@ -118,6 +119,7 @@ func newTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger
 		ips:            netutil.DistinctNetSet{Subnet: tableSubnet, Limit: tableIPLimit},
 		log:            log,
 		enrFilter:      filter,
+		bucketSize:     bucketSize,
 	}
 	if err := tab.setFallbackNodes(bootnodes); err != nil {
 		return nil, err
@@ -131,6 +133,10 @@ func newTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger
 	for i := 0; i < maxWorkerTask; i++ {
 		tab.workerPoolTask <- struct{}{}
 	}
+	// Set default bucket size if bucketSize is not set
+	if tab.bucketSize <= 0 {
+		tab.bucketSize = defaultBucketSize
+	}
 
 	tab.seedRand()
 	tab.loadSeedNodes()
@@ -138,8 +144,8 @@ func newTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger
 	return tab, nil
 }
 
-func newMeteredTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger, filter NodeFilterFunc) (*Table, error) {
-	tab, err := newTable(t, db, bootnodes, log, filter)
+func newMeteredTable(t transport, db *enode.DB, bootnodes []*enode.Node, log log.Logger, filter NodeFilterFunc, bucketSize int) (*Table, error) {
+	tab, err := newTable(t, db, bootnodes, log, filter, bucketSize)
 	if err != nil {
 		return nil, err
 	}
@@ -557,7 +563,7 @@ func (tab *Table) addSeenNodeSync(n *node) {
 		// Already in bucket, don't add.
 		return
 	}
-	if len(b.entries) >= bucketSize {
+	if len(b.entries) >= tab.bucketSize {
 		// Bucket full, maybe add as replacement.
 		tab.addReplacement(b, n)
 		return
@@ -636,7 +642,7 @@ func (tab *Table) addVerifiedNodeSync(n *node) {
 		// Already in bucket, moved to front.
 		return
 	}
-	if len(b.entries) >= bucketSize {
+	if len(b.entries) >= tab.bucketSize {
 		// Bucket full, maybe add as replacement.
 		tab.addReplacement(b, n)
 		return
@@ -646,7 +652,7 @@ func (tab *Table) addVerifiedNodeSync(n *node) {
 		return
 	}
 	// Add to front of bucket.
-	b.entries, _ = pushNode(b.entries, n, bucketSize)
+	b.entries, _ = pushNode(b.entries, n, tab.bucketSize)
 	b.replacements = deleteNode(b.replacements, n)
 	n.addedAt = time.Now()
 	if tab.nodeAddedHook != nil {
