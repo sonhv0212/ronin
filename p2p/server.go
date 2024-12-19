@@ -308,6 +308,15 @@ func (c *conn) set(f connFlag, val bool) {
 	}
 }
 
+// SetListenFunc sets the function used to accept inbound connections (testing only)
+func (srv *Server) SetListenFunc(f func(network, addr string) (net.Listener, error)) {
+	srv.listenFunc = f
+}
+
+func (srv *Server) UDPv4() *discover.UDPv4 {
+	return srv.ntab
+}
+
 // LocalNode returns the local node record.
 func (srv *Server) LocalNode() *enode.LocalNode {
 	return srv.localnode
