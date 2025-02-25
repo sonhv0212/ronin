@@ -4517,12 +4517,17 @@ func testInsertChainWithSidecars(t *testing.T, scheme string) {
 	wg.Wait()
 }
 
-func TestSidecarsPruning(t *testing.T) {
-	testSidecarsPruning(t, rawdb.HashScheme)
-	testSidecarsPruning(t, rawdb.PathScheme)
+func TestSidecarPruning(t *testing.T) {
+	testSidecarsPruning(t, true, rawdb.HashScheme)
+	testSidecarsPruning(t, true, rawdb.PathScheme)
 }
 
-func testSidecarsPruning(t *testing.T, scheme string) {
+func TestNoSidecarPruning(t *testing.T) {
+	testSidecarsPruning(t, false, rawdb.HashScheme)
+	testSidecarsPruning(t, false, rawdb.PathScheme)
+}
+
+func testSidecarsPruning(t *testing.T, enabled bool, scheme string) {
 	var prunePeriod uint64 = 1000
 	privateKey, _ := crypto.GenerateKey()
 	address := crypto.PubkeyToAddress(privateKey.PublicKey)
@@ -4542,6 +4547,9 @@ func testSidecarsPruning(t *testing.T, scheme string) {
 	chain, err := NewBlockChain(db, DefaultCacheConfigWithScheme(scheme), gspec, nil, engine, vm.Config{}, nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to create blockchain, err %s", err)
+	}
+	if !enabled {
+		chain.cacheConfig.NoPruningSideCar = true
 	}
 	chain.setBlobPrunePeriod(prunePeriod)
 	signer := types.NewCancunSigner(chainConfig.ChainID)
@@ -4608,8 +4616,14 @@ func testSidecarsPruning(t *testing.T, scheme string) {
 		pruneBlockNumber := curBlockNumber - prunePeriod
 		pruneBlockHash := chain.GetBlockByNumber(uint64(pruneBlockNumber)).Hash()
 		sidecars := rawdb.ReadBlobSidecars(chain.db, pruneBlockHash, uint64(pruneBlockNumber))
-		if sidecars != nil {
-			t.Fatalf("Sidecars should be pruned at block %d", curBlockNumber-prunePeriod)
+		if enabled {
+			if sidecars != nil {
+				t.Fatalf("Sidecars should be pruned at block %d", curBlockNumber-prunePeriod)
+			}
+		} else {
+			if sidecars == nil {
+				t.Fatalf("Sidecars must not be pruned at block %d", curBlockNumber-prunePeriod)
+			}
 		}
 	}
 }

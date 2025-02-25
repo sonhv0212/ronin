@@ -202,6 +202,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 			SnapshotLimit:       config.SnapshotCache,
 			Preimages:           config.Preimages,
 			TriesInMemory:       config.TriesInMemory,
+			NoPruningSideCar:    config.NoPruningSideCar,
 			StateHistory:        config.StateHistory,
 			StateScheme:         config.StateScheme,
 		}
