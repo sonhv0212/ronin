@@ -249,6 +249,7 @@ var (
 	RoninMainnetProfileContractAddress             = common.HexToAddress("0x840EBf1CA767CB690029E91856A357a43B85d035")
 	RoninMainnetFinalityTrackingAddress            = common.HexToAddress("0xA30B2932CD8b8A89E34551Cdfa13810af38dA576")
 	RoninMainnetWhiteListDeployerContractV2Address = common.HexToAddress("0xc1876d5C4BFAF0eE325E4226B2bdf216D9896AE1")
+	RoninMainnetTreasuryAddress                    = common.HexToAddress("0xb903E3936d3ca90b69b29F1df2810083a2DC0d71")
 
 	RoninMainnetChainConfig = &ChainConfig{
 		ChainID:                            big.NewInt(2020),
@@ -293,10 +294,10 @@ var (
 		TrippBlock:           big.NewInt(36052600),
 		TrippPeriod:          big.NewInt(19907),
 		AaronBlock:           big.NewInt(36052600),
-		ShanghaiBlock:        big.NewInt(43254600),
-		CancunBlock:          big.NewInt(43254600),
-		VenokiBlock:          big.NewInt(43254600),
-		RoninTreasuryAddress: nil,
+		ShanghaiBlock:        big.NewInt(43447600),
+		CancunBlock:          big.NewInt(43447600),
+		VenokiBlock:          big.NewInt(43447600),
+		RoninTreasuryAddress: &RoninMainnetTreasuryAddress,
 	}
 
 	RoninTestnetBlacklistContract                  = common.HexToAddress("0xF53EED5210c9cF308abFe66bA7CF14884c95A8aC")
@@ -307,8 +308,8 @@ var (
 	RoninTestnetProfileContractAddress             = common.HexToAddress("0x3b67c8D22a91572a6AB18acC9F70787Af04A4043")
 	RoninTestnetFinalityTrackingAddress            = common.HexToAddress("0x41aCDFe786171824a037f2Cd6224c5916A58969a")
 	RoninTestnetWhiteListDeployerContractV2Address = common.HexToAddress("0x50a7e07Aa75eB9C04281713224f50403cA79851F")
-	RoninTestnetTreasuryAddress                   = common.HexToAddress("0x5cfca565c09cc32bb7ba7222a648f1b014d6c30b")
-	RoninTestnetChainConfig = &ChainConfig{
+	RoninTestnetTreasuryAddress                    = common.HexToAddress("0x5cfca565c09cc32bb7ba7222a648f1b014d6c30b")
+	RoninTestnetChainConfig                        = &ChainConfig{
 		ChainID:                            big.NewInt(2021),
 		HomesteadBlock:                     big.NewInt(0),
 		EIP150Block:                        big.NewInt(0),
