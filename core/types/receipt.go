@@ -232,7 +232,7 @@ func (r *Receipt) decodeTyped(b []byte) error {
 		return errEmptyTypedReceipt
 	}
 	switch b[0] {
-	case DynamicFeeTxType, AccessListTxType, BlobTxType, SponsoredTxType:
+	case DynamicFeeTxType, AccessListTxType, BlobTxType, SetCodeTxType, SponsoredTxType:
 		var data receiptRLP
 		err := rlp.DecodeBytes(b[1:], &data)
 		if err != nil {
@@ -395,7 +395,7 @@ func (rs Receipts) EncodeIndex(i int, w *bytes.Buffer) {
 	switch r.Type {
 	case LegacyTxType:
 		rlp.Encode(w, data)
-	case AccessListTxType, DynamicFeeTxType, BlobTxType, SponsoredTxType:
+	case AccessListTxType, DynamicFeeTxType, BlobTxType, SetCodeTxType, SponsoredTxType:
 		w.WriteByte(r.Type)
 		rlp.Encode(w, data)
 	default:

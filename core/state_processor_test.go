@@ -46,19 +46,23 @@ import (
 func TestStateProcessorErrors(t *testing.T) {
 	var (
 		config = &params.ChainConfig{
-			ChainID:             big.NewInt(1),
-			HomesteadBlock:      big.NewInt(0),
-			EIP150Block:         big.NewInt(0),
-			EIP155Block:         big.NewInt(0),
-			EIP158Block:         big.NewInt(0),
-			ByzantiumBlock:      big.NewInt(0),
-			ConstantinopleBlock: big.NewInt(0),
-			PetersburgBlock:     big.NewInt(0),
-			IstanbulBlock:       big.NewInt(0),
-			MuirGlacierBlock:    big.NewInt(0),
-			BerlinBlock:         big.NewInt(0),
-			LondonBlock:         big.NewInt(0),
-			Ethash:              new(params.EthashConfig),
+			ChainID:                 big.NewInt(1),
+			HomesteadBlock:          big.NewInt(0),
+			EIP150Block:             big.NewInt(0),
+			EIP155Block:             big.NewInt(0),
+			EIP158Block:             big.NewInt(0),
+			ByzantiumBlock:          big.NewInt(0),
+			ConstantinopleBlock:     big.NewInt(0),
+			PetersburgBlock:         big.NewInt(0),
+			IstanbulBlock:           big.NewInt(0),
+			MuirGlacierBlock:        big.NewInt(0),
+			BerlinBlock:             big.NewInt(0),
+			LondonBlock:             big.NewInt(0),
+			Ethash:                  new(params.EthashConfig),
+			TerminalTotalDifficulty: big.NewInt(0),
+			ShanghaiBlock:           big.NewInt(0),
+			CancunBlock:             big.NewInt(0),
+			PragueBlock:             big.NewInt(0),
 		}
 		signer  = types.LatestSigner(config)
 		key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
@@ -90,6 +94,22 @@ func TestStateProcessorErrors(t *testing.T) {
 		}), signer, key1)
 		return tx
 	}
+	var mkSetCodeTx = func(nonce uint64, to common.Address, gasLimit uint64, gasTipCap, gasFeeCap *big.Int, authlist []types.Authorization) *types.Transaction {
+		tx, err := types.SignTx(types.NewTx(&types.SetCodeTx{
+			Nonce:     nonce,
+			GasTipCap: uint256.MustFromBig(gasTipCap),
+			GasFeeCap: uint256.MustFromBig(gasFeeCap),
+			Gas:       gasLimit,
+			To:        to,
+			Value:     new(uint256.Int),
+			AuthList:  authlist,
+		}), signer, key1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return tx
+	}
+
 	{ // Tests against a 'recent' chain definition
 		var (
 			db    = rawdb.NewMemoryDatabase()
@@ -204,6 +224,12 @@ func TestStateProcessorErrors(t *testing.T) {
 					mkDynamicTx(0, common.Address{}, params.TxGas, bigNumber, bigNumber),
 				},
 				want: "could not apply tx 0 [0xd82a0c2519acfeac9a948258c47e784acd20651d9d80f9a1c67b4137651c3a24]: insufficient funds for gas * price + value: address 0x71562b71999873DB5b286dF957af199Ec94617F7 have 1000000000000000000 want 2431633873983640103894990685182446064918669677978451844828609264166175722438635000",
+			},
+			{ // ErrEmptyAuthList
+				txs: []*types.Transaction{
+					mkSetCodeTx(0, common.Address{}, params.TxGas, big.NewInt(params.InitialBaseFee), big.NewInt(params.InitialBaseFee), nil),
+				},
+				want: "could not apply tx 0 [0xc18d10f4c809dbdfa1a074c3300de9bc4b7f16a20f0ec667f6f67312b71b956a]: EIP-7702 transaction with empty auth list (sender 0x71562b71999873DB5b286dF957af199Ec94617F7)",
 			},
 		} {
 			block := GenerateBadBlock(genesis, ethash.NewFaker(), tt.txs, gspec.Config)

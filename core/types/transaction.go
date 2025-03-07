@@ -38,6 +38,10 @@ var (
 	ErrGasFeeCapTooLow            = errors.New("fee cap less than base fee")
 	ErrSamePayerSenderSponsoredTx = errors.New("payer = sender in sponsored transaction")
 	errEmptyTypedTx               = errors.New("empty typed transaction bytes")
+	errShortTypedTx               = errors.New("typed transaction too short")
+	errInvalidYParity             = errors.New("'yParity' field must be 0 or 1")
+	errVYParityMismatch           = errors.New("'v' and 'yParity' fields do not match")
+	errVYParityMissing            = errors.New("missing 'yParity' or 'v' field in transaction")
 )
 
 // Transaction types.
@@ -46,6 +50,7 @@ const (
 	AccessListTxType
 	DynamicFeeTxType
 	BlobTxType
+	SetCodeTxType
 
 	SponsoredTxType = 100
 )
@@ -196,6 +201,8 @@ func (tx *Transaction) decodeTyped(b []byte) (TxData, error) {
 		inner = new(SponsoredTx)
 	case BlobTxType:
 		inner = new(BlobTx)
+	case SetCodeTxType:
+		inner = new(SetCodeTx)
 	default:
 		return nil, ErrTxTypeNotSupported
 	}
@@ -456,6 +463,15 @@ func (tx *Transaction) WithBlobTxSidecar(sideCar *BlobTxSidecar) *Transaction {
 	return cpy
 }
 
+// AuthList returns the authorizations list of the transaction.
+func (tx *Transaction) AuthList() []Authorization {
+	setcodetx, ok := tx.inner.(*SetCodeTx)
+	if !ok {
+		return nil
+	}
+	return setcodetx.AuthList
+}
+
 // BlobGasFeeCapCmp compares the blob fee cap of two transactions.
 func (tx *Transaction) BlobGasFeeCapCmp(other *Transaction) int {
 	return tx.BlobGasFeeCap().Cmp(other.BlobGasFeeCap())
@@ -596,6 +612,7 @@ type Message struct {
 	expiredTime   uint64
 	blobGasFeeCap *big.Int
 	blobHashes    []common.Hash
+	authList      []Authorization
 }
 
 // Create a new message with payer is the same as from, expired time = 0
@@ -611,6 +628,7 @@ func NewMessage(
 	isFake bool,
 	blobFeeCap *big.Int,
 	blobHashes []common.Hash,
+	authList []Authorization,
 ) Message {
 	return Message{
 		from:          from,
@@ -628,6 +646,7 @@ func NewMessage(
 		expiredTime:   0,
 		blobGasFeeCap: blobFeeCap,
 		blobHashes:    blobHashes,
+		authList:      authList,
 	}
 }
 
@@ -647,6 +666,7 @@ func (tx *Transaction) AsMessage(s Signer, baseFee *big.Int) (Message, error) {
 		expiredTime:   tx.ExpiredTime(),
 		blobGasFeeCap: tx.BlobGasFeeCap(),
 		blobHashes:    tx.BlobHashes(),
+		authList:      tx.AuthList(),
 	}
 	// If baseFee provided, set gasPrice to effectiveGasPrice.
 	if baseFee != nil {
@@ -691,6 +711,7 @@ func (m Message) ExpiredTime() uint64    { return m.expiredTime }
 
 func (m Message) BlobHashes() []common.Hash { return m.blobHashes }
 func (m Message) BlobGasFeeCap() *big.Int   { return m.blobGasFeeCap }
+func (m Message) AuthList() []Authorization { return m.authList }
 
 // copyAddressPtr copies an address.
 func copyAddressPtr(a *common.Address) *common.Address {
