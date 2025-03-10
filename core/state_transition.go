@@ -496,7 +496,7 @@ func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
 		if msg.AuthList() != nil {
 			for _, auth := range msg.AuthList() {
 				// Note errors are ignored, we simply skip invalid authorizations here.
-				st.applyAuthorization(msg, &auth)
+				st.applyAuthorization(&auth)
 			}
 		}
 
@@ -586,7 +586,7 @@ func (st *StateTransition) validateAuthorization(auth *types.Authorization) (aut
 }
 
 // applyAuthorization applies an EIP-7702 code delegation to the state.
-func (st *StateTransition) applyAuthorization(msg Message, auth *types.Authorization) error {
+func (st *StateTransition) applyAuthorization(auth *types.Authorization) error {
 	authority, err := st.validateAuthorization(auth)
 	if err != nil {
 		return err

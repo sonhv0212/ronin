@@ -17,7 +17,6 @@
 package vm
 
 import (
-	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -568,7 +567,6 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	}
 	// Ensure there's no existing contract already at the designated address
 	contractHash := evm.StateDB.GetCodeHash(address)
-	fmt.Printf("nonce: %d, contractHash: %s\n", evm.StateDB.GetNonce(address), contractHash)
 	if evm.StateDB.GetNonce(address) != 0 || (contractHash != (common.Hash{}) && contractHash != emptyCodeHash) {
 		captureTraceEarly(ErrContractAddressCollision)
 		return nil, common.Address{}, 0, ErrContractAddressCollision
