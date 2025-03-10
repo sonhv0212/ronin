@@ -315,6 +315,10 @@ func (s pragueSigner) Hash(tx *Transaction) common.Hash {
 		})
 }
 
+func (s pragueSigner) Payer(tx *Transaction) (common.Address, error) {
+	return payerInternal(s, tx)
+}
+
 type cancunSigner struct{ londonSigner }
 
 // NewCancunSigner returns a signer that accepts
