@@ -548,6 +548,29 @@ func (tx *Transaction) WithSignature(signer Signer, sig []byte) (*Transaction, e
 	return &Transaction{inner: cpy, time: tx.time}, nil
 }
 
+func (tx *Transaction) SetCodeAuthorizations() []Authorization {
+	setcodetx, ok := tx.inner.(*SetCodeTx)
+	if !ok {
+		return nil
+	}
+	return setcodetx.AuthList
+}
+
+// SetCodeAuthorities returns a list of each authorization's corresponding authority.
+func (tx *Transaction) SetCodeAuthorities() []common.Address {
+	setcodetx, ok := tx.inner.(*SetCodeTx)
+	if !ok {
+		return nil
+	}
+	auths := make([]common.Address, 0, len(setcodetx.AuthList))
+	for _, auth := range setcodetx.AuthList {
+		if addr, err := auth.Authority(); err == nil {
+			auths = append(auths, addr)
+		}
+	}
+	return auths
+}
+
 // Transactions implements DerivableList for transactions.
 type Transactions []*Transaction
 
