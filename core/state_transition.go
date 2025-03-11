@@ -315,9 +315,10 @@ func (st *StateTransition) preCheck() error {
 				msg.From().Hex(), stNonce)
 		}
 		// Make sure the sender is an EOA
-		if codeHash := st.state.GetCodeHash(msg.From()); codeHash != emptyCodeHash && codeHash != (common.Hash{}) {
-			return fmt.Errorf("%w: address %v, codehash: %s", ErrSenderNoEOA,
-				msg.From().Hex(), codeHash)
+		code := st.state.GetCode(msg.From())
+		_, delegated := types.ParseDelegation(code)
+		if len(code) > 0 && !delegated {
+			return fmt.Errorf("%w: address %v, len(code): %d", ErrSenderNoEOA, msg.From().Hex(), len(code))
 		}
 	}
 	// Make sure that transaction gasFeeCap is greater than the baseFee (post london)
